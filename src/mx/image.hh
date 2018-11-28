@@ -10,6 +10,7 @@
 #include "src/debug.h"
 #include "src/cv.hh"
 
+
 using namespace std;
 using namespace mxnet::cpp;
 
@@ -206,107 +207,63 @@ inline NDArray flt::mx::image::MatVector_to_NDArray(vector <cv::Mat> &v, Context
 }
 
 
+inline void flt::mx::image::Mat_to_FArray(cv::Mat & mat, vector <float> & farray){
+	
+	int h = mat.size().height;
+
+	int w = mat.size().width;
+	
+	int channel = mat.channels();
+
+	int cbase, hbase = 0;
+	
+	for (int c = 0; c < channel; ++c) {
+
+		cbase = c * h * w;
+
+		for (int i = 0; i < h; ++i) {
+
+			hbase = h * i;
+			
+			for (int j = 0; j < w; ++j) {
+		  		
+				//farray.emplace_back(static_cast <float> (mat.data[(i * h + j) * channel + c]));
+				//farray[c * h * w + h * i + j] = (static_cast <float> (mat.data[(i * h + j) * channel + c]));
+				farray[cbase + hbase + j] = (static_cast <int> (mat.data[(hbase + j) * channel + c]));
+				//farray[cbase + hbase + j] = (reinterpret_cast <float> (mat.data[(hbase + j) * channel + c]));
+				//farray[c * h * w + h * i + j] = (mat.at <float> (c, h, w));
+			}
+		}
+	}
+}
+
 // check ?
 
-inline void flt::mx::image::MatVector_to_NDArray(NDArray &ndtotal, vector <cv::Mat> &v, Context device){
+inline void flt::mx::image::MatVector_to_NDArray(NDArray & ndtotal, vector <cv::Mat> & v, Context device){
 
 	int h = v[0].size().height;
 
 	int w = v[0].size().width;
 
-	int channel = v[0].channels();
+	int c = v[0].channels();
 
 	int b = v.size();
 
-	float * ftotal = new float [b * h * w * channel];
+	int size = b * h * w * c;
+	
+	vector <float> ftotal = vector <float> (size);
 
-	int size = h * w * channel;
+	//cv::Mat mat (h, w, CV_32FC3);
 
-	Shape sim(h, w, channel);
+	//v[0].convertTo(mat, CV_32FC3);
+	
+	Mat_to_FArray(v[0], ftotal);
+	
+	//ftotal.assign(v[0].begin <float> (), v[0].end <float> ());
 
-	Shape stotal(b, h, w, channel);
-
-	//cout << "float point : " << flt::fcv::getf(&v[0], 0, 1, 2) << endl;
-
-	for(int i = 0; i != b; i++){
-
-		cv::Mat mat(h, w, CV_32FC3);
-
-		v[i].convertTo(mat, CV_32FC3, 1.0 / 255);
-
-		float * fimg = (float *)mat.data;
-
-		copy(fimg, fimg + size, ftotal + i * size);
-
-	}
-
-	//shape stotal(b, h, w, channel);
-
-	//NDArray ndtotal(stotal, device);
-
-	ndtotal.SyncCopyFromCPU(ftotal, b * size);
+	ndtotal.SyncCopyFromCPU(ftotal.data(), size);
 
 	NDArray::WaitAll();
-
-	delete ftotal;
-
-}
-
-
-
-inline void flt::mx::image::Mat_to_NDArray(cv::Mat &mat, NDArray &nd){
-	
-	int size = mat.size().height * mat.size().width * mat.channels();
-
-	float *fmat = (float *)mat.data;
-
-	float *fimg = new float[size];
-
-	copy(fmat, fmat + size, fimg);
-	
-	nd.SyncCopyFromCPU(fimg, size);
-
-	NDArray::WaitAll();
-
-}
-
-/* failed , return [] when cout <<  */
-
-inline NDArray flt::mx::image::Mat_to_NDArray(cv::Mat &umat, Context &ctx){
-	
-	int height = umat.size().height;
-
-	int width = umat.size().width;
-
-	int channel = umat.channels();
-
-	int size = height * width * channel;
-
-	cout << "height : " << height << endl;
-
-	cout << "width : " << width << endl;
-
-	cout << "channels : " << channel << endl;
-
-	cv::Mat fmat(height, width, CV_32FC3);
-		
-	cout << "uu" << endl;
-	/*
-	 *	only convert data type
-	 *	
-	 *	don't scale the pixel range from 0 - 255 to float 0.0 - 1.0
-	 *
-	 */
-	
-	umat.convertTo(fmat, CV_32FC3, 1.0 / 255);
-	
-	NDArray nd(Shape(height, width, channel), ctx);
-	
-	nd.SyncCopyFromCPU((float *)fmat.data, size);
-	
-	NDArray::WaitAll();
-
-	return nd;
 
 }
 
@@ -348,17 +305,6 @@ inline cv::Mat flt::mx::image::NDArray_to_Mat(NDArray &nd, float scale){
 	
 	NDArray::WaitAll();
 
-	/*	NDArray -> float
-	 *	
-	 *	NDArray -> CV_32FC3 -> CV_8UC3
-	 *
-	 *	although NDArray accept only float data
-	 *
-	 *	but we dont make pixel range from 0 - 255 => 0 - 1
-	 *
-	 * 	we still use 0.0 - 255.0
-	 *
-	 */
 	cv::Mat mat(height, width, CV_32FC3, fimg);
 	
 	mat.convertTo(mat, CV_8UC3, scale);

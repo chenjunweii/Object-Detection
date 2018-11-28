@@ -67,7 +67,11 @@ flt: src/cv.h \
 	${CXX} -shared -fPIC ${DEPENDENCIES} ${LIBRARY} ${INCLUDE} -o libflt.so
 
 
-main: main.cc detector.hh detector.h
+main: main.cc detector.hh detector.h box.hh box.h
 
 	 ${CXX} main.cc ${LIBRARY} ${INCLUDE} -I include -o main -L . -l flt
+
+image: test_image.cc detector.hh detector.h image.hh
+
+	 ${CXX} test_image.cc ${LIBRARY} ${INCLUDE} -I include -o image -L . -l flt
 

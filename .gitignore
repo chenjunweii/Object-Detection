@@ -1,9 +1,11 @@
-test*
 *.mp4
 *.so
 *.params
 *.json
 *.jpg
 main
+test
+image
+*.webm
 
 

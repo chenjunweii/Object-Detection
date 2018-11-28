@@ -6,45 +6,12 @@
 #include <mutex>
 #include <queue>
 #include <opencv2/opencv.hpp>
-
+#include "box.h"
 #include "struct.h"
 
 
 using namespace std;
 
-struct Size {
-
-	int w = 0;
-
-	int h = 0;
-
-	Size(int _w, int _h) : w(_w), h(_h) {};
-
-};
-
-struct bbox {
-
-	public:
-
-		bbox();
-		
-		bbox(vector <float> & fbbox, Size & size);
-
-		bbox(float c, float s, float x, float y, float x1, float y1);
-
-		int c = 0;
-
-		float s = 0;
-
-		int x = 0;
-
-		int y = 0;
-
-		int x1 = 0;
-
-		int y1 = 0;
-
-};
 
 class detector {
 
@@ -54,11 +21,15 @@ class detector {
 		
 		~ detector();
 
-		void convert(vector <NDArray> & ndout, vector <vector <bbox>> & bboxes);
+		void convert(vector <NDArray> & ndout, vector <vector <bbox>> & bboxes, Size & size_);
 
 		int visualize(cv::Mat & in, vector <vector <bbox>> & bboxes);
 
 		int detect(int tid);
+
+		void detect_image(string & image);
+		
+		//int detect(cv::Mat & in);
 		
 		int capture(DetectType & dt, string & filename);
 
@@ -70,19 +41,21 @@ class detector {
 
 		int cbatch = 1;
 
+		int way = 1;
+
 		bool switching = false;
 
 		map <string, bool> alive;
 
-		Size size;
+		Size size, osize;
 		
 		Symbol net;
+
+		float threshold = 0.5;
 
 		vector <Executor *> E;
 
 		string json, params;
-
-		NDArray mean;
 
 		vector <string> classes;
 
@@ -92,9 +65,11 @@ class detector {
 		
 		vector <vector <cv::Mat>> tinput = vector <vector <cv::Mat>> (2);
 
-		queue <cv::Mat> MatQueue;
+		deque <cv::Mat> MatQueue;
+
+		deque <cv::Mat> FrameQueue;
 		
-		queue <vector <vector <bbox>>> BoxesQueue;
+		deque <vector <vector <bbox>>> BoxesQueue;
 
 		/*
 
@@ -116,6 +91,8 @@ class detector {
 
 		vector <map <string, NDArray>> auxs = vector <map <string, NDArray>> (2);
 		
+		map <string, NDArray> nds;
+		
 		map <string, NDArray> grad;
 		
 		map <string, OpReqType> req;
@@ -128,17 +105,16 @@ class detector {
 		
 		vector <mutex> lock = vector <mutex> (2);
 
-		mutex mMatQueue, mBoxesQueue;
+		mutex mMatQueue, mBoxesQueue, mFrames;
+		
+		int post(bool v); // visualize
 
 	private:
 
+		int request();
 		void unload(int no);
 		void load(int no);
-		int request();
-		int post(bool v); // visualize
 
 };
-
-
 
 #endif

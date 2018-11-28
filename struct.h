@@ -12,4 +12,16 @@ enum Type {
 	norm
 };
 
+struct Size {
+
+	int w = 0;
+
+	int h = 0;
+
+	Size(int _w, int _h) : w(_w), h(_h) {};
+
+	Size() {};
+
+};
+
 #endif

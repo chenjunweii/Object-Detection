@@ -1,10 +1,11 @@
+
 #include <iostream>
 #include "flt.h"
 #include <map>
 #include <thread>
 #include <vector>
 #include "detector.hh"
-
+#include "image.hh"
 
 using namespace std;
 using namespace flt::mx::image;
@@ -30,27 +31,9 @@ int main(){
 
 	detector det(json, params, mean, device, classes, size, false);
 
-	DetectType dt = DetectType::video;
+	string image = "dog1.jpg";
 
-	//string video = "av10239720.mp4";
-	//
-	string video = "Asakusa Street View Tokyo JAPAN-DFr-uP6iz40.mp4";
-
-	thread capture (& detector::capture, & det, ref(dt), ref(video));
-
-	int tid_0 = 0; int tid_1 = 1;
-
-    thread det_0 (& detector::detect, & det, ref(tid_0));
-    
-	//thread det_1 (& detector::detect, & det, ref(tid_1));
-
-	det.post(true);
-    
-	capture.join();
-
-    det_0.join();
-    
-	//det_1.join();
+	det.detect_image(image);
 
 	MXNotifyShutdown();
 

@@ -57,6 +57,8 @@ namespace flt{
 			inline NDArray MatVector_to_NDArray(vector <cv::Mat> &v, Context device);
 			
 			inline vector <cv::Mat> NDArray_to_MatVector(NDArray &n);
+			
+			inline void Mat_to_FArray(cv::Mat & mat, vector <float> & farray);
 
 			inline void Mat_to_NDArray(cv::Mat &mat, NDArray &nd);
 			
